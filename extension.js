@@ -146,7 +146,7 @@ function showResultsPanel(result, context) {
 
 /**
  * Generate HTML for the results panel
- * @param {object} result - The analysis result
+ * @param {object} result - The analysis result with language and results array
  * @returns {string} HTML content
  */
 function getResultsHtml(result) {
@@ -159,9 +159,6 @@ function getResultsHtml(result) {
         'N/A': '#6b7280'
     };
 
-    const severityColor = severityColors[result.severity] || '#6b7280';
-    const isVulnerable = result.vulnerability !== 'None Detected' && result.vulnerability !== 'Error';
-
     // Escape HTML to prevent XSS in our own panel
     const escapeHtml = (str) => {
         return String(str)
@@ -172,8 +169,71 @@ function getResultsHtml(result) {
             .replace(/'/g, '&#039;');
     };
 
-    const statusIcon = isVulnerable ? '⚠️' : (result.vulnerability === 'Error' ? '❌' : '✅');
-    const statusText = isVulnerable ? 'Vulnerability Detected' : (result.vulnerability === 'Error' ? 'Analysis Error' : 'Code Appears Safe');
+    const results = result.results || [];
+    const vulnCount = results.length;
+    const hasVulnerabilities = vulnCount > 0 && results[0].vulnerability !== 'Error';
+    const isError = vulnCount > 0 && results[0].vulnerability === 'Error';
+
+    // Determine header info
+    let statusIcon, statusText, headerColor;
+    if (isError) {
+        statusIcon = '❌';
+        statusText = 'Analysis Error';
+        headerColor = '#6b7280';
+    } else if (hasVulnerabilities) {
+        statusIcon = '⚠️';
+        statusText = `${vulnCount} ${vulnCount === 1 ? 'vulnerability' : 'vulnerabilities'} detected`;
+        headerColor = '#ea580c';
+    } else {
+        statusIcon = '✅';
+        statusText = 'No vulnerabilities detected';
+        headerColor = '#22c55e';
+    }
+
+    // Generate cards for each vulnerability
+    let cardsHtml = '';
+
+    if (hasVulnerabilities || isError) {
+        results.forEach((vuln, index) => {
+            const severityColor = severityColors[vuln.severity] || '#6b7280';
+            cardsHtml += `
+            <div class="vuln-section" style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--vscode-panel-border);">
+                ${vulnCount > 1 ? `<div class="vuln-number" style="font-size: 11px; color: var(--vscode-descriptionForeground); margin-bottom: 8px;">Issue ${index + 1} of ${vulnCount}</div>` : ''}
+                
+                <div class="card">
+                    <div class="card-title">Vulnerability</div>
+                    <div class="vulnerability-name" style="color: ${severityColor};">${escapeHtml(vuln.vulnerability)}</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Severity Level</div>
+                    <span class="severity-badge" style="background: ${severityColor}22; color: ${severityColor}; border: 1px solid ${severityColor}44;">${escapeHtml(vuln.severity)}</span>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Explanation</div>
+                    <p class="explanation">${escapeHtml(vuln.explanation)}</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Recommended Fix</div>
+                    <pre class="patch-code">${escapeHtml(vuln.patch)}</pre>
+                </div>
+            </div>`;
+        });
+    } else {
+        // No vulnerabilities - show safe message
+        cardsHtml = `
+        <div class="safe-message" style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+            <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #22c55e;">Code Appears Safe</h2>
+            <p style="color: var(--vscode-descriptionForeground); max-width: 400px; margin: 0 auto;">
+                No common vulnerability patterns were detected in this code snippet. 
+                Note: This is a pattern-based analysis and may not catch all security issues. 
+                Always follow secure coding practices and conduct thorough security reviews.
+            </p>
+        </div>`;
+    }
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -211,14 +271,15 @@ function getResultsHtml(result) {
         }
         .header-text .status {
             font-size: 14px;
-            color: var(--vscode-descriptionForeground);
+            color: ${headerColor};
+            font-weight: 500;
         }
         .card {
             background: var(--vscode-input-background);
             border: 1px solid var(--vscode-panel-border);
             border-radius: 8px;
             padding: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .card-title {
             font-size: 12px;
@@ -230,7 +291,6 @@ function getResultsHtml(result) {
         .vulnerability-name {
             font-size: 16px;
             font-weight: 600;
-            color: ${severityColor};
         }
         .severity-badge {
             display: inline-block;
@@ -238,9 +298,6 @@ function getResultsHtml(result) {
             border-radius: 4px;
             font-size: 12px;
             font-weight: 600;
-            background: ${severityColor}22;
-            color: ${severityColor};
-            border: 1px solid ${severityColor}44;
         }
         .explanation {
             font-size: 14px;
@@ -274,25 +331,7 @@ function getResultsHtml(result) {
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-title">Vulnerability</div>
-        <div class="vulnerability-name">${escapeHtml(result.vulnerability)}</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Severity Level</div>
-        <span class="severity-badge">${escapeHtml(result.severity)}</span>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Explanation</div>
-        <p class="explanation">${escapeHtml(result.explanation)}</p>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Recommended Fix</div>
-        <pre class="patch-code">${escapeHtml(result.patch)}</pre>
-    </div>
+    ${cardsHtml}
 
     <div class="footer">
         <p>🔒 AI Code Vulnerability Detector • Pattern-based security analysis</p>

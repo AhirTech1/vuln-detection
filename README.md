@@ -5,6 +5,7 @@ A VS Code extension that detects security vulnerabilities in AI-generated code a
 ## Features
 
 - 🔍 **Pattern-based vulnerability detection** for Python and JavaScript
+- 📊 **Multi-vulnerability detection** - finds ALL issues in a single code selection
 - ⚠️ **Clear severity levels** (Critical, High, Medium, Low)
 - 📖 **Detailed explanations** of why code is vulnerable
 - 🔧 **Secure patch suggestions** with code examples
@@ -50,10 +51,9 @@ A VS Code extension that detects security vulnerabilities in AI-generated code a
 3. **Right-click** and choose **"Analyze Code Security"**
 
 4. View the results in the side panel showing:
-   - Vulnerability name
-   - Severity level
-   - Explanation of the issue
-   - Recommended secure patch
+   - **Count of vulnerabilities detected** (e.g., "3 vulnerabilities detected")
+   - For each issue: vulnerability name, severity badge, explanation, and recommended patch
+   - All vulnerabilities are displayed as stacked cards for easy review
 
 ## Example Usage
 

@@ -194,28 +194,30 @@ document.body.appendChild(p);'''
     # Check if language is supported
     if language not in patterns:
         return {
-            'vulnerability': 'Unsupported Language',
-            'severity': 'N/A',
-            'explanation': f'Language "{language}" is not supported. Currently supported: Python, JavaScript.',
-            'patch': 'N/A'
+            'language': language,
+            'results': [{
+                'vulnerability': 'Unsupported Language',
+                'severity': 'N/A',
+                'explanation': f'Language "{language}" is not supported. Currently supported: Python, JavaScript.',
+                'patch': 'N/A'
+            }]
         }
     
-    # Check each pattern
+    # Collect ALL matching vulnerabilities
+    results = []
     for vuln in patterns[language]:
         if re.search(vuln['pattern'], code, re.IGNORECASE):
-            return {
+            results.append({
                 'vulnerability': vuln['vulnerability'],
                 'severity': vuln['severity'],
                 'explanation': vuln['explanation'],
                 'patch': vuln['patch']
-            }
+            })
     
-    # No vulnerabilities found
+    # Return results (empty array if no vulnerabilities found)
     return {
-        'vulnerability': 'None Detected',
-        'severity': 'Safe',
-        'explanation': 'No common vulnerability patterns were detected in this code snippet. Note: This is a pattern-based analysis and may not catch all security issues. Always follow secure coding practices and conduct thorough security reviews.',
-        'patch': 'N/A - No changes needed'
+        'language': language,
+        'results': results
     }
 
 
@@ -231,10 +233,13 @@ def main():
         
         if not code:
             result = {
-                'vulnerability': 'Error',
-                'severity': 'N/A',
-                'explanation': 'No code provided for analysis.',
-                'patch': 'N/A'
+                'language': language or 'unknown',
+                'results': [{
+                    'vulnerability': 'Error',
+                    'severity': 'N/A',
+                    'explanation': 'No code provided for analysis.',
+                    'patch': 'N/A'
+                }]
             }
         else:
             result = detect_vulnerabilities(code, language)
@@ -244,18 +249,24 @@ def main():
         
     except json.JSONDecodeError as e:
         error_result = {
-            'vulnerability': 'Error',
-            'severity': 'N/A',
-            'explanation': f'Invalid JSON input: {str(e)}',
-            'patch': 'N/A'
+            'language': 'unknown',
+            'results': [{
+                'vulnerability': 'Error',
+                'severity': 'N/A',
+                'explanation': f'Invalid JSON input: {str(e)}',
+                'patch': 'N/A'
+            }]
         }
         print(json.dumps(error_result, indent=2))
     except Exception as e:
         error_result = {
-            'vulnerability': 'Error',
-            'severity': 'N/A',
-            'explanation': f'Analysis failed: {str(e)}',
-            'patch': 'N/A'
+            'language': 'unknown',
+            'results': [{
+                'vulnerability': 'Error',
+                'severity': 'N/A',
+                'explanation': f'Analysis failed: {str(e)}',
+                'patch': 'N/A'
+            }]
         }
         print(json.dumps(error_result, indent=2))
 
