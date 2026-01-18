@@ -1,0 +1,41 @@
+{
+    "name": "vuln-detection",
+    "displayName": "AI Code Vulnerability Detector",
+    "description": "Detect security vulnerabilities in AI-generated code and get patch recommendations",
+    "version": "1.0.0",
+    "publisher": "hackathon-demo",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Linters",
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:vulnDetection.analyze"
+    ],
+    "main": "./extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "vulnDetection.analyze",
+                "title": "Analyze Code Security"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "vulnDetection.analyze",
+                    "when": "editorHasSelection",
+                    "group": "navigation"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "lint": "eslint .",
+        "test": "node ./test/runTest.js"
+    },
+    "devDependencies": {},
+    "dependencies": {}
+}
