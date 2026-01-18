@@ -199,19 +199,30 @@ document.body.appendChild(p);'''
                 'vulnerability': 'Unsupported Language',
                 'severity': 'N/A',
                 'explanation': f'Language "{language}" is not supported. Currently supported: Python, JavaScript.',
-                'patch': 'N/A'
+                'patch': 'N/A',
+                'lines': []
             }]
         }
     
-    # Collect ALL matching vulnerabilities
+    # Split code into lines for line number detection
+    code_lines = code.split('\n')
+    
+    # Collect ALL matching vulnerabilities with line numbers
     results = []
     for vuln in patterns[language]:
-        if re.search(vuln['pattern'], code, re.IGNORECASE):
+        # Find all lines that match this pattern
+        matching_lines = []
+        for line_num, line in enumerate(code_lines, start=1):
+            if re.search(vuln['pattern'], line, re.IGNORECASE):
+                matching_lines.append(line_num)
+        
+        if matching_lines:
             results.append({
                 'vulnerability': vuln['vulnerability'],
                 'severity': vuln['severity'],
                 'explanation': vuln['explanation'],
-                'patch': vuln['patch']
+                'patch': vuln['patch'],
+                'lines': matching_lines
             })
     
     # Return results (empty array if no vulnerabilities found)

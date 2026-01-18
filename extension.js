@@ -196,6 +196,12 @@ function getResultsHtml(result) {
     if (hasVulnerabilities || isError) {
         results.forEach((vuln, index) => {
             const severityColor = severityColors[vuln.severity] || '#6b7280';
+            const lines = vuln.lines || [];
+            const lineText = lines.length === 1
+                ? `Line ${lines[0]}`
+                : lines.length > 1
+                    ? `Lines ${lines.join(', ')}`
+                    : '';
             cardsHtml += `
             <div class="vuln-section" style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--vscode-panel-border);">
                 ${vulnCount > 1 ? `<div class="vuln-number" style="font-size: 11px; color: var(--vscode-descriptionForeground); margin-bottom: 8px;">Issue ${index + 1} of ${vulnCount}</div>` : ''}
@@ -206,8 +212,13 @@ function getResultsHtml(result) {
                 </div>
 
                 <div class="card">
-                    <div class="card-title">Severity Level</div>
-                    <span class="severity-badge" style="background: ${severityColor}22; color: ${severityColor}; border: 1px solid ${severityColor}44;">${escapeHtml(vuln.severity)}</span>
+                    <div class="card-title">Location & Severity</div>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        ${lineText ? `<span class="location-badge" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #3b82f622; color: #3b82f6; border: 1px solid #3b82f644;">
+                            <span style="font-size: 14px;">📍</span> ${escapeHtml(lineText)}
+                        </span>` : ''}
+                        <span class="severity-badge" style="background: ${severityColor}22; color: ${severityColor}; border: 1px solid ${severityColor}44;">${escapeHtml(vuln.severity)}</span>
+                    </div>
                 </div>
 
                 <div class="card">
